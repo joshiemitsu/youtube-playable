@@ -38,6 +38,7 @@ public class BoardInitializer : MonoBehaviour
 
     private void SpawnBoard(int p_width, int p_height)
     {
+        Debug.Log("Spawn Board called");
         _worldPosition = new Vector2[p_width, p_height]; 
 
         for (int w = 0; w < p_width; w++)
