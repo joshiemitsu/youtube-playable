@@ -37,5 +37,4 @@ public class GameBoardSystem : MonoBehaviour
 
     public void SetSlot(Vector2 p_slot, int p_value)
         => _boardSlots[(int) p_slot.x, (int) p_slot.y] = p_value;
-
 }
