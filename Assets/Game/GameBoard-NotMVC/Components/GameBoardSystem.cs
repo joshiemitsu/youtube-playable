@@ -10,13 +10,13 @@ public class GameBoardSystem : MonoBehaviour
     [SerializeField] private int HEIGHT = 10;
 
     [Header("Subjects")]
-    public readonly ReplaySubject<(int width, int height)> SpawnGrid = new();
+    public readonly Subject<(int width, int height)> SpawnGrid = new();
 
     private const int FREE_SLOT = 0;
 
     private int[,] _boardSlots;
 
-    public void Awake()
+    public void Start()
     {
         Debug.Log("GBSystem Awake");
         Init();
