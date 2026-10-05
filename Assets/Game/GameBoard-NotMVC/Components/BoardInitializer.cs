@@ -9,15 +9,9 @@ public class BoardInitializer : MonoBehaviour
     [Header("Main System")]
     [SerializeField] private GameBoardSystem _boardSystem;
 
-    [Header("Spacing")]
-    [SerializeField] private float _spacing = 1;
-
     [Header("Prefab")]
     [SerializeField] private GameObject _dotsPrefab;
     [SerializeField] private GameObject _arrowPrefab;
-
-    [Header("World Parent")]
-    [SerializeField] private Transform _worldParent;
 
     [Header("World Positions")]
     [SerializeField] private Vector2[,] _worldPosition;
@@ -45,19 +39,11 @@ public class BoardInitializer : MonoBehaviour
         {
             for (int h = 0; h < p_height; h++)
             {
-                GameObject obj = Instantiate(_dotsPrefab, _worldParent.transform);
+                GameObject obj = Instantiate(_dotsPrefab, _boardSystem.WorldParent.transform);
 
-                float xOffset = ((float)(p_width - 1) * _spacing) * 0.5f;
-                float yOffset = ((float)(p_height - 1) * _spacing) * 0.5f;
+                obj.transform.position = _boardSystem.GetWorldPosition(new Vector2(w,h));
 
-                float xPos = _worldParent.position.x + 
-                            (float)(w * _spacing) - xOffset;
-                float yPos = _worldParent.position.y + 
-                            (float)(h * _spacing) - yOffset;
-
-                obj.transform.position = new Vector3(xPos, yPos);
-
-                _worldPosition[w, h] = obj.transform.position;
+                _worldPosition[w, h] = new Vector2(w, h);
             }
         }
 
@@ -66,16 +52,57 @@ public class BoardInitializer : MonoBehaviour
 
     private void SpawnArrows()
     {
-        GameObject obj = Instantiate(_arrowPrefab, _worldParent.transform);
+        GameObject obj = Instantiate(_arrowPrefab, _boardSystem.WorldParent.transform);
         ArrowEntry arrowEntry = obj.GetComponent<ArrowEntry>();
 
         List<Vector2> posList = new List<Vector2>();
-        posList.Add(_worldPosition[0, 0]);
         posList.Add(_worldPosition[1, 0]);
-        posList.Add(_worldPosition[2, 0]);
-        posList.Add(_worldPosition[2, 1]);
-        posList.Add(_worldPosition[2, 2]);
+        _boardSystem.SetSlot(new Vector2(1, 0), (int)SlotType.OCCUPIED);
 
-        arrowEntry.Initialize(_boardSystem, posList);
+        posList.Add(_worldPosition[2, 0]);
+        _boardSystem.SetSlot(new Vector2(2, 0), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[3, 0]);
+        _boardSystem.SetSlot(new Vector2(3, 0), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[3, 1]);
+        _boardSystem.SetSlot(new Vector2(3, 1), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[3, 2]);
+        _boardSystem.SetSlot(new Vector2(3, 2), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[4, 2]);
+        _boardSystem.SetSlot(new Vector2(4, 2), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[5, 2]);
+        _boardSystem.SetSlot(new Vector2(5, 2), (int)SlotType.OCCUPIED);
+
+        ArrowData newData = new ArrowData();
+        newData.Points = posList;
+        newData.Direction = Vector2.left;
+        newData.StartPoint = posList[0]; // Get first index as the start position
+
+        arrowEntry.Initialize(_boardSystem, newData);
+
+
+        GameObject obj2 = Instantiate(_arrowPrefab, _boardSystem.WorldParent.transform);
+        ArrowEntry arrowEntry2 = obj2.GetComponent<ArrowEntry>();
+
+        List<Vector2> posList2 = new List<Vector2>();
+        posList2.Add(_worldPosition[0, 2]);
+        _boardSystem.SetSlot(new Vector2(0, 2), (int)SlotType.OCCUPIED);
+
+        posList2.Add(_worldPosition[0, 1]);
+        _boardSystem.SetSlot(new Vector2(0, 1), (int)SlotType.OCCUPIED);
+
+        //posList2.Add(_worldPosition[0, 0]);
+        //_boardSystem.SetSlot(new Vector2(0, 0), (int)SlotType.OCCUPIED);
+
+        ArrowData newData2 = new ArrowData();
+        newData2.Points = posList2;
+        newData2.Direction = Vector2.up;
+        newData2.StartPoint = posList2[0]; // Get first index as the start position
+
+        arrowEntry2.Initialize(_boardSystem, newData2);
     }
 }

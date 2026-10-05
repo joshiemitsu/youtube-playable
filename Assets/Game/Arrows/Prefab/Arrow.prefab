@@ -28,9 +28,55 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 5291490499794736452}
   m_Father: {fileID: 4579748664465851805}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3360723475366814231
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5291490499794736452}
+  - component: {fileID: 170318646793190518}
+  m_Layer: 0
+  m_Name: MoveHandler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5291490499794736452
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3360723475366814231}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4981500493008035665}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &170318646793190518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3360723475366814231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c78a55d198dc8e4b996b321c7b84960, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArrowMoveHandler
+  _speed: 0.1
 --- !u!1 &6096634670759927037
 GameObject:
   m_ObjectHideFlags: 0
@@ -166,7 +212,7 @@ LineRenderer:
       m_ColorSpace: 0
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
-    numCornerVertices: 0
+    numCornerVertices: 20
     numCapVertices: 90
     alignment: 0
     textureMode: 0
@@ -192,6 +238,7 @@ MonoBehaviour:
   _headObj: {fileID: 6758527062716503547, guid: eae2e1394db80fc448635c9271dbc091, type: 3}
   _bodyObj: {fileID: 3116892820919302062, guid: 4b34eec10f46a0f488f672e148461718, type: 3}
   _parent: {fileID: 6451884159629076683}
+  _moveHandler: {fileID: 170318646793190518}
 --- !u!1 &8182717527139960079
 GameObject:
   m_ObjectHideFlags: 0
