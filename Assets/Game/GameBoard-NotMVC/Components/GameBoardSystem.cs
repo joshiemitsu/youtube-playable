@@ -85,7 +85,7 @@ public class GameBoardSystem : MonoBehaviour
             if (!isValidSlot)
             {
                 Debug.Log("is not ValidSlot");
-                return null;
+                return pathToExit;
             }
 
             pathToExit.Add(_currentPoint);
@@ -104,8 +104,28 @@ public class GameBoardSystem : MonoBehaviour
         }
     }
 
+    // Check if the position reached the edge of the puzzle it can exit the level
+    public bool CanExitLevel(Vector2 p_slot, Vector2 p_direction)
+    {
+        bool canExitLeft = (p_direction == Vector2.left && p_slot.x == 0);
+        bool canExitRight = (p_direction == Vector2.right && p_slot.x == WIDTH - 1);
+        bool canExitUp = (p_direction == Vector2.up && p_slot.y == HEIGHT - 1);
+        bool canExitDown = (p_direction == Vector2.down && p_slot.x == 0);
+
+        return canExitLeft || canExitRight || canExitUp || canExitDown;
+    }
+
     public int GetSlot(Vector2 p_slot)
-        => _boardSlots[(int)p_slot.x, (int)p_slot.y];
+    {
+        // If slot is in edge
+        if(p_slot.x >= WIDTH || p_slot.x < 0 
+            || p_slot.y >= HEIGHT || p_slot.y < 0)
+        {
+            return (int)SlotType.RESTRICTED;
+        }
+
+        return _boardSlots[(int)p_slot.x, (int)p_slot.y];
+    }
 
     public void SetSlot(Vector2 p_slot, int p_value)
         => _boardSlots[(int) p_slot.x, (int) p_slot.y] = p_value;

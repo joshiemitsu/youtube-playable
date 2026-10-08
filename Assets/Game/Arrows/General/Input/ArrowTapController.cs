@@ -7,6 +7,7 @@ public class ArrowTapController : MonoBehaviour
 
     private void Start()
     {
-        _input.OnArrowTapped.SubscribeAwait(async (arrow, ct) => await arrow.OnPressed(), AwaitOperation.Drop).AddTo(this);
+        _input.OnArrowTapped.SubscribeAwait(async (arrow, ct) => await arrow.OnPressed(), 
+            AwaitOperation.Drop).AddTo(this);
     }
 }

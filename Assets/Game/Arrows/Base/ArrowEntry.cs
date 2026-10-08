@@ -37,9 +37,7 @@ public class ArrowEntry : MonoBehaviour
     public ArrowData ArrowData => _arrowData;
     private ArrowData _arrowData;
 
-    public readonly ObservableList<Vector2> Points = new();
-    public readonly Subject<Vector2> OnMove = new();
-
+    private void SetIsActive(bool p_isActive) => _isActive = p_isActive;
     private bool _isActive = false;
 
     public void Initialize(GameBoardSystem p_boardSystem, ArrowData p_data)
@@ -47,41 +45,43 @@ public class ArrowEntry : MonoBehaviour
         // Intialize the components
         _moveHandler.Initialize(this, p_boardSystem);
 
-        OnMove.Subscribe(OnMoveChanged);
-        OnMove.OnNext(Vector2.zero);
-
         int FIRST_IDX = 0;
         this.transform.position = p_data.Points[FIRST_IDX];
 
         _arrowData = p_data;
         _boardSystem = p_boardSystem;
 
+        _isActive = true;
+
         SpawnParts();
     }
 
     public UniTask OnPressed()
     {
-        if(!_moveHandler.IsMoving() || !_isActive)
+        Debug.Log("Arrow On Pressed: " + _moveHandler.IsMoving() + " " + _isActive);
+        if(_moveHandler.IsMoving() || !_isActive)
         {
            return UniTask.CompletedTask;
         }
 
-        List<Vector2> path = _boardSystem.GetPathCells(_arrowData.Direction, _arrowData.StartPoint);
-        bool canMove = path != null;
+        List<Vector2> path = _boardSystem.GetPathCells(_arrowData.Direction, _arrowData.StartPoint); 
 
-        if (canMove)
+        bool canExitLevel = _boardSystem.CanExitLevel(path[^1], _arrowData.Direction);
+
+        Debug.Log("Arrow On Pressed: " + canExitLevel + " " + _boardSystem.GetSlot(path[^1]));
+
+        if (canExitLevel)
         {
-            _boardSystem.ReleaseSlots(_arrowData);
-            return _moveHandler.Move(path, _arrowData.Direction, true);
+            CleanUp();
         }
 
-        return _moveHandler.Move(new List<Vector2> { _arrowData.StartPoint + _arrowData.Direction },
-                          _arrowData.Direction, false);
+        return _moveHandler.Move(path, _arrowData.Direction, canExitLevel);
     }
 
     public void CleanUp()
     {
-        _isActive = false;
+        _boardSystem.ReleaseSlots(_arrowData);
+        SetIsActive(true);
     }
 
     // Spawn the parts of the arrow
@@ -111,14 +111,14 @@ public class ArrowEntry : MonoBehaviour
 
     private void LateUpdate()
     {
+        if(!_isActive)
+        {
+            return;
+        }
+
         for (int i = 0; i < _subUnitList.Count; i++)
         {
             _arrowData.LineRender.SetPosition(i, _subUnitList[i].transform.position);
         }
-    }
-
-    private void OnMoveChanged(Vector2 p_direction)
-    {
-
     }
 } 

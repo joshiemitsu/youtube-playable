@@ -56,8 +56,8 @@ public class BoardInitializer : MonoBehaviour
         ArrowEntry arrowEntry = obj.GetComponent<ArrowEntry>();
 
         List<Vector2> posList = new List<Vector2>();
-        posList.Add(_worldPosition[1, 0]);
-        _boardSystem.SetSlot(new Vector2(1, 0), (int)SlotType.OCCUPIED);
+        //posList.Add(_worldPosition[1, 0]);
+        //_boardSystem.SetSlot(new Vector2(1, 0), (int)SlotType.OCCUPIED);
 
         posList.Add(_worldPosition[2, 0]);
         _boardSystem.SetSlot(new Vector2(2, 0), (int)SlotType.OCCUPIED);
@@ -95,8 +95,8 @@ public class BoardInitializer : MonoBehaviour
         posList2.Add(_worldPosition[0, 1]);
         _boardSystem.SetSlot(new Vector2(0, 1), (int)SlotType.OCCUPIED);
 
-        //posList2.Add(_worldPosition[0, 0]);
-        //_boardSystem.SetSlot(new Vector2(0, 0), (int)SlotType.OCCUPIED);
+        posList2.Add(_worldPosition[0, 0]);
+        _boardSystem.SetSlot(new Vector2(0, 0), (int)SlotType.OCCUPIED);
 
         ArrowData newData2 = new ArrowData();
         newData2.Points = posList2;

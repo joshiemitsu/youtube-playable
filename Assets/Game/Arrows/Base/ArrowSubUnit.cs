@@ -23,16 +23,9 @@ public class ArrowSubUnit : MonoBehaviour
         _currentPoint = p_startCell;
     }
 
-    public void MoveSubUnit(Vector2 p_cell, Vector2 p_worldPos, float p_speed, bool isValidMovement)
+    public void MoveSubUnit(Vector2 p_cell, Vector2 p_worldPos, float p_speed)
     {
-        if (isValidMovement)
-        {
-            _currentPoint = p_cell;
-            this.transform.DOMove(p_worldPos, p_speed);
-        }
-        else
-        {
-            this.transform.DOMove(p_worldPos, p_speed).SetLoops(2, LoopType.Yoyo);
-        }
+        _currentPoint = p_cell;
+        this.transform.DOMove(p_worldPos, p_speed);
     }
 }

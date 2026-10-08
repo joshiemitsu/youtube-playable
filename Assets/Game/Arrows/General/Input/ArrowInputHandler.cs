@@ -8,7 +8,6 @@ public class ArrowInputHandler : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Camera _camera;
-    [Tooltip("Press action, e.g. UI/Click from InputSystem_Actions")]
     [SerializeField] private InputActionReference _tapAction;
     [SerializeField] private LayerMask _arrowLayer;
 
@@ -18,9 +17,14 @@ public class ArrowInputHandler : MonoBehaviour
 
     public void SetEnabled(bool p_isEnabled) => _isEnabled = p_isEnabled;
 
+    private void Start()
+    {
+        SetEnabled(true);
+    }
+
     private void OnEnable()
     {
-        _tapAction.action.performed += OnTap;
+        _tapAction.action.performed += OnTap; 
         _tapAction.action.Enable();
     }
 
@@ -36,6 +40,7 @@ public class ArrowInputHandler : MonoBehaviour
 
     private void OnTap(InputAction.CallbackContext p_context)
     {
+        Debug.Log("On Tap Pressed: " + _isEnabled);
         if(!_isEnabled) return;
 
         Vector2 screenPos = Pointer.current.position.ReadValue();
@@ -44,6 +49,7 @@ public class ArrowInputHandler : MonoBehaviour
         Collider2D hit = Physics2D.OverlapPoint(worldPos, _arrowLayer);
         if (hit != null && hit.TryGetComponent(out ArrowSubUnit subUnit))
         {
+            Debug.Log("Object Hit: " + subUnit.Parent.gameObject.name);
             OnArrowTapped.OnNext(subUnit.Parent);
         }
     }
