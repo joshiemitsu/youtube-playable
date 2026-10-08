@@ -13,32 +13,25 @@ public class ArrowSubUnit : MonoBehaviour
     public Vector2 CurrentPoint => _currentPoint;
     [SerializeField] private Vector2 _currentPoint = Vector2.zero;
 
-    [SerializeField] private Vector2 _targetPos;
-
     private ArrowEntry _parent = null;
 
-    public void Initialize(ArrowEntry p_parent, Vector2 p_startPoint)
+    public void Initialize(ArrowEntry p_parent, Vector2 p_startCell)
     {
         _parent = p_parent;
-
-        _startPoint = this.transform.position;
-        _currentPoint = _startPoint;
+        _startPoint = p_startCell;
+        _currentPoint = p_startCell;
     }
 
-    public void MoveSubUnit(Vector2 p_targetPos, float p_speed, bool isValidMovement)
+    public void MoveSubUnit(Vector2 p_cell, Vector2 p_worldPos, float p_speed, bool isValidMovement)
     {
-        _targetPos = p_targetPos;
-
         if (isValidMovement)
         {
-            this.transform.DOMove(p_targetPos, p_speed).OnComplete(() =>
-            {
-                _currentPoint = p_targetPos;
-            });
+            _currentPoint = p_cell;
+            this.transform.DOMove(p_worldPos, p_speed);
         }
         else
         {
-            this.transform.DOMove(p_targetPos, p_speed).SetLoops(2, LoopType.Yoyo);
+            this.transform.DOMove(p_worldPos, p_speed).SetLoops(2, LoopType.Yoyo);
         }
     }
 

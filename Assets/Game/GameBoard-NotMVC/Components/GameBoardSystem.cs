@@ -53,7 +53,7 @@ public class GameBoardSystem : MonoBehaviour
     }
 
     // Check if the arrows can move given the said direction and returns world position points
-    public List<Vector2> GetPathAsWorldPos(Vector2 p_direction, Vector2 p_startPoint)
+    public List<Vector2> GetPathCells(Vector2 p_direction, Vector2 p_startPoint)
     {
         // set initial values
         _startPoint = p_startPoint;
@@ -71,10 +71,6 @@ public class GameBoardSystem : MonoBehaviour
             if (isOutOfBounds)
             {
                 Debug.Log("Reached Out of bounds");
-
-                Vector2 finalTargetPos = GetWorldPosition(_currentPoint) + (p_direction * 10);
-                pathToExit.Add(finalTargetPos);
-
                 return pathToExit;
             }
 
@@ -92,8 +88,7 @@ public class GameBoardSystem : MonoBehaviour
                 return null;
             }
 
-            pathToExit.Add(GetWorldPosition(_currentPoint));
-            //pathToExit.Add(_currentPoint);
+            pathToExit.Add(_currentPoint);
 
             _currentPoint += p_direction;
         }
@@ -119,7 +114,8 @@ public class GameBoardSystem : MonoBehaviour
     {
         float xOffset = (WIDTH - 1) * SPACING * 0.5f;
         float yOffset = (HEIGHT - 1) * SPACING * 0.5f;
-        return new Vector2(p_slotPos.x * SPACING - xOffset,
-                            p_slotPos.y * SPACING - yOffset);
+        return (Vector2)_worldParent.position + new Vector2(
+                        p_slotPos.x * SPACING - xOffset,
+                        p_slotPos.y * SPACING - yOffset);
     }
 }

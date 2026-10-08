@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.CompilerServices;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ public class ArrowMoveHandler: MonoBehaviour
     [SerializeField] private float _speed = 0;
 
     private GameBoardSystem _boardSystem = null;
+
+    private Vector2 _direction;
 
     private ArrowEntry _parent = null;
 
@@ -27,51 +30,45 @@ public class ArrowMoveHandler: MonoBehaviour
         _boardSystem = p_system;
     }
 
-    public void Move(List<Vector2> p_pathToExit, bool p_isValid)
+    public void Move(List<Vector2> p_pathCells, Vector2 p_direction, bool p_isValid)
     {
-        _pathToExit = p_pathToExit;
+        _pathToExit = p_pathCells;
+        _direction = p_direction;
         _isValid = p_isValid;
         DoMoveSequence().Forget();
     }
 
     private async UniTaskVoid DoMoveSequence()
     {
-        int totalMovementCount = _subUnits.Count + _pathToExit.Count;
-        int movementIdx = 1;
+        int bufferSteps = 10; // makes sure that arrow shows outside the screen
+        int totalSteps = _isValid ? _pathToExit.Count + _subUnits.Count + bufferSteps : 1;
 
-        while (totalMovementCount > 0)
+        for (int step = 0; step < totalSteps; step++)
         {
-            // Iterate to all the sub units and animate things.
-            for (int i = 0; i < _subUnits.Count; i++)
+            Debug.Log("Steps loop: " + step);
+            Vector2 leaderCell = GetHeadCell(step);
+            foreach (var unit in _subUnits)
             {
-                Vector2 targetPos;
-
-                int FIRST_IDX = 0;
-                Vector2 targetPoint = new Vector2();
-                // if first index, check the next point based on direction otherwise get the point from previous segment
-                if (i == FIRST_IDX)
-                {
-                    targetPoint = _pathToExit[movementIdx];
-                    targetPos = targetPoint;
-                }
-                else
-                {
-                    int prevUnitIdx = i - 1;
-                    targetPoint = _subUnits[prevUnitIdx].CurrentPoint;
-                    targetPos = targetPoint;
-                }
-
-                float actualSpeed = _speed;
-                _subUnits[i].MoveSubUnit(targetPos, actualSpeed, _isValid);
+                Debug.Log(" " + unit.gameObject.name);
+                Vector2 previousCell = unit.CurrentPoint;
+                unit.MoveSubUnit(leaderCell, _boardSystem.GetWorldPosition(leaderCell), _speed, _isValid);
+                if (!_isValid) break;          // blocked: only the head bumps
+                leaderCell = previousCell;
             }
             await UniTask.Delay(TimeSpan.FromSeconds(_speed));
-
-            if (movementIdx < _pathToExit.Count - 1)
-            {
-                movementIdx++;
-            }
-
-            totalMovementCount-- ;
         }
+    }
+
+    private async UniTaskVoid DoReverseMoveSequence()
+    {
+
+    }
+
+    private Vector2 GetHeadCell(int step)
+    {
+        if (step < _pathToExit.Count) return _pathToExit[step];
+        Vector2 last = _pathToExit.Count > 0 ? _pathToExit[^1] : _subUnits[0].CurrentPoint;
+
+        return last + _direction * (step - _pathToExit.Count + 1);
     }
 }

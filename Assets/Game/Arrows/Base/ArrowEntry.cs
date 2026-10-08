@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks.Triggers;
 using ObservableCollections;
 using R3;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using static UnityEditor.PlayerSettings;
 
 public class ArrowData
 {
@@ -61,25 +58,19 @@ public class ArrowEntry : MonoBehaviour
 
     public void OnPressed()
     {
-        List<Vector2> pathToExit = new List<Vector2>();
-        pathToExit = _boardSystem.GetPathAsWorldPos(_arrowData.Direction, _arrowData.StartPoint);
+        List<Vector2> path = _boardSystem.GetPathCells(_arrowData.Direction, _arrowData.StartPoint);
+        bool canMove = path != null;
 
-        bool canMove = pathToExit != null;
-
-        // Arrow Entry Move
         if (canMove)
         {
-            Debug.Log("Make Character Move then release the slots covered");
-            _moveHandler.Move(pathToExit, canMove);
+            _moveHandler.Move(path, _arrowData.Direction, true);
             _boardSystem.ReleaseSlots(_arrowData);
         }
         else
         {
-            Vector2 firstTargetPoint = _arrowData.StartPoint + _arrowData.Direction;
-            Debug.Log("Checking first target: " + _arrowData.StartPoint + " - " + firstTargetPoint);
-            pathToExit.Add(_boardSystem.GetWorldPosition(firstTargetPoint));
-
-            _moveHandler.Move(pathToExit, canMove);
+            // bump toward the blocking cell
+            _moveHandler.Move(new List<Vector2> { _arrowData.StartPoint + _arrowData.Direction },
+                              _arrowData.Direction, false);
         }
     }
 

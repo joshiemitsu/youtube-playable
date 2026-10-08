@@ -76,7 +76,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c78a55d198dc8e4b996b321c7b84960, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ArrowMoveHandler
-  _speed: 0.1
+  _speed: 0.05
 --- !u!1 &6096634670759927037
 GameObject:
   m_ObjectHideFlags: 0
