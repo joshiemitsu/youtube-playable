@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using ObservableCollections;
 using R3;
 using UnityEngine;
@@ -39,6 +40,8 @@ public class ArrowEntry : MonoBehaviour
     public readonly ObservableList<Vector2> Points = new();
     public readonly Subject<Vector2> OnMove = new();
 
+    private bool _isActive = false;
+
     public void Initialize(GameBoardSystem p_boardSystem, ArrowData p_data)
     {
         // Intialize the components
@@ -56,22 +59,29 @@ public class ArrowEntry : MonoBehaviour
         SpawnParts();
     }
 
-    public void OnPressed()
+    public UniTask OnPressed()
     {
+        if(!_moveHandler.IsMoving() || !_isActive)
+        {
+           return UniTask.CompletedTask;
+        }
+
         List<Vector2> path = _boardSystem.GetPathCells(_arrowData.Direction, _arrowData.StartPoint);
         bool canMove = path != null;
 
         if (canMove)
         {
-            _moveHandler.Move(path, _arrowData.Direction, true);
             _boardSystem.ReleaseSlots(_arrowData);
+            return _moveHandler.Move(path, _arrowData.Direction, true);
         }
-        else
-        {
-            // bump toward the blocking cell
-            _moveHandler.Move(new List<Vector2> { _arrowData.StartPoint + _arrowData.Direction },
-                              _arrowData.Direction, false);
-        }
+
+        return _moveHandler.Move(new List<Vector2> { _arrowData.StartPoint + _arrowData.Direction },
+                          _arrowData.Direction, false);
+    }
+
+    public void CleanUp()
+    {
+        _isActive = false;
     }
 
     // Spawn the parts of the arrow

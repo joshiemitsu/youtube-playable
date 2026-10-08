@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: -5429229110391372361}
   - component: {fileID: 5744780290508939165}
   - component: {fileID: 6131758138425208003}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -95,7 +95,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArrowSubUnit
   _startPoint: {x: 0, y: 0}
   _currentPoint: {x: 0, y: 0}
-  _targetPos: {x: 0, y: 0}
 --- !u!50 &6131758138425208003
 Rigidbody2D:
   serializedVersion: 5
@@ -133,7 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7979247400089115136}
   - component: {fileID: 2702375415613283718}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -13,6 +13,7 @@ public class ArrowSubUnit : MonoBehaviour
     public Vector2 CurrentPoint => _currentPoint;
     [SerializeField] private Vector2 _currentPoint = Vector2.zero;
 
+    public ArrowEntry Parent => _parent;
     private ArrowEntry _parent = null;
 
     public void Initialize(ArrowEntry p_parent, Vector2 p_startCell)
@@ -33,11 +34,5 @@ public class ArrowSubUnit : MonoBehaviour
         {
             this.transform.DOMove(p_worldPos, p_speed).SetLoops(2, LoopType.Yoyo);
         }
-    }
-
-    public void OnMouseDown()
-    {
-        _parent.OnPressed();
-        Debug.Log("On Pressed in Arrow: " + this.gameObject.name);
     }
 }

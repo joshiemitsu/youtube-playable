@@ -52,7 +52,7 @@ public class GameBoardSystem : MonoBehaviour
         OnBoardChanged.Dispose();
     }
 
-    // Check if the arrows can move given the said direction and returns world position points
+    // Check if the arrows can move given the said direction and returns board position
     public List<Vector2> GetPathCells(Vector2 p_direction, Vector2 p_startPoint)
     {
         // set initial values

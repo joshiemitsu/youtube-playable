@@ -1,15 +1,21 @@
 using Cysharp.Threading.Tasks;
-using Cysharp.Threading.Tasks.CompilerServices;
-using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
-using static UnityEngine.EventSystems.EventTrigger;
 
+/// <summary>
+/// Handles the arrow movements
+/// </summary>
 public class ArrowMoveHandler: MonoBehaviour
 {
     [Header("Config")]
     [SerializeField] private float _speed = 0;
+
+    [Tooltip("Extra steps after the tail leaves the board, so the arrow fully exits the screen.")]
+    [SerializeField] private int _bufferSteps = 10;
+
+    private bool _isMoving = false;
 
     private GameBoardSystem _boardSystem = null;
 
@@ -17,7 +23,7 @@ public class ArrowMoveHandler: MonoBehaviour
 
     private ArrowEntry _parent = null;
 
-    private bool _isValid = false;
+    private bool _isPathToExitValid = false;
 
     private List<Vector2> _pathToExit = new List<Vector2>(); 
 
@@ -30,38 +36,40 @@ public class ArrowMoveHandler: MonoBehaviour
         _boardSystem = p_system;
     }
 
-    public void Move(List<Vector2> p_pathCells, Vector2 p_direction, bool p_isValid)
+    public bool IsMoving()
+    {
+        return _isMoving;
+    }
+
+    public UniTask Move(List<Vector2> p_pathCells, Vector2 p_direction, bool p_isValid)
     {
         _pathToExit = p_pathCells;
         _direction = p_direction;
-        _isValid = p_isValid;
-        DoMoveSequence().Forget();
+        _isPathToExitValid = p_isValid;
+
+        _isMoving = true;
+        return DoMoveSequence();
     }
 
-    private async UniTaskVoid DoMoveSequence()
+    private async UniTask DoMoveSequence()
     {
-        int bufferSteps = 10; // makes sure that arrow shows outside the screen
-        int totalSteps = _isValid ? _pathToExit.Count + _subUnits.Count + bufferSteps : 1;
+        int totalSteps = _isPathToExitValid ? _pathToExit.Count + _subUnits.Count + _bufferSteps : 1;
 
         for (int step = 0; step < totalSteps; step++)
         {
-            Debug.Log("Steps loop: " + step);
             Vector2 leaderCell = GetHeadCell(step);
             foreach (var unit in _subUnits)
             {
-                Debug.Log(" " + unit.gameObject.name);
                 Vector2 previousCell = unit.CurrentPoint;
-                unit.MoveSubUnit(leaderCell, _boardSystem.GetWorldPosition(leaderCell), _speed, _isValid);
-                if (!_isValid) break;          // blocked: only the head bumps
+                unit.MoveSubUnit(leaderCell, _boardSystem.GetWorldPosition(leaderCell), _speed, _isPathToExitValid);
+
+                if (!_isPathToExitValid) break; // blocked: only the head bumps
                 leaderCell = previousCell;
             }
             await UniTask.Delay(TimeSpan.FromSeconds(_speed));
         }
-    }
 
-    private async UniTaskVoid DoReverseMoveSequence()
-    {
-
+        _isMoving = false;
     }
 
     private Vector2 GetHeadCell(int step)

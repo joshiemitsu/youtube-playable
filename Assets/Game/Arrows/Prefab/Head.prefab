@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8398828331410814166}
   - component: {fileID: 7562533529932582612}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 5279642478500926585}
   - component: {fileID: -2379721811057516675}
   - component: {fileID: 485920639801337076}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -186,7 +186,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArrowSubUnit
   _startPoint: {x: 0, y: 0}
   _currentPoint: {x: 0, y: 0}
-  _targetPos: {x: 0, y: 0}
 --- !u!50 &485920639801337076
 Rigidbody2D:
   serializedVersion: 5
