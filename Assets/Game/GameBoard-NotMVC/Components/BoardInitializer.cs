@@ -74,8 +74,14 @@ public class BoardInitializer : MonoBehaviour
         posList.Add(_worldPosition[4, 2]);
         _boardSystem.SetSlot(new Vector2(4, 2), (int)SlotType.OCCUPIED);
 
-        posList.Add(_worldPosition[5, 2]);
-        _boardSystem.SetSlot(new Vector2(5, 2), (int)SlotType.OCCUPIED);
+        posList.Add(_worldPosition[4, 3]);
+        _boardSystem.SetSlot(new Vector2(4, 3), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[4, 4]);
+        _boardSystem.SetSlot(new Vector2(4, 4), (int)SlotType.OCCUPIED);
+
+        posList.Add(_worldPosition[5, 4]);
+        _boardSystem.SetSlot(new Vector2(5, 4), (int)SlotType.OCCUPIED);
 
         ArrowData newData = new ArrowData();
         newData.Points = posList;

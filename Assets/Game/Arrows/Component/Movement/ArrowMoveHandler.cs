@@ -121,7 +121,7 @@ public class ArrowMoveHandler: MonoBehaviour
         Debug.Log("Path to original: " + _pathToOriginal.Count);
 
         // Reverse to original position
-        for (int step = _pathToOriginal.Count; step > 0; step --)
+        for (int step = _pathToOriginal.Count - 1; step >= 0; step --)
         {
             Vector2 prevCell = GetTailCell(step);
 
@@ -135,22 +135,19 @@ public class ArrowMoveHandler: MonoBehaviour
             }
             await UniTask.Delay(TimeSpan.FromSeconds(_speed));
         }
+
+        _isMoving = false;
     }
 
     private Vector2 GetHeadCell(int step)
     {
         if (step < _pathToExit.Count) return _pathToExit[step];
-        Vector2 last = _pathToExit.Count > 0 ? _pathToExit[^1] : _subUnits[0].CurrentPoint;
-
-        return last + _direction * (step - _pathToExit.Count + 1);
+        return _subUnits[0].CurrentPoint + _direction;
     }
 
     private Vector2 GetTailCell(int step)
     {
         if (step < _pathToOriginal.Count) return _pathToOriginal[step];
-
-        Vector2 last = _pathToOriginal.Count > 0 ? _pathToOriginal[^1] : _subUnits[^1].CurrentPoint;
-
-        return last * (step - _pathToExit.Count + 1);
+        return _subUnits[^1].CurrentPoint;
     }
 }

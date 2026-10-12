@@ -46,7 +46,7 @@ public class GameBoardSystem : MonoBehaviour
         SpawnGrid.OnNext((WIDTH, HEIGHT));
     }
 
-    public void OnDisable()
+    public void OnDestroy()
     {
         SpawnGrid.Dispose();
         OnBoardChanged.Dispose();
@@ -104,15 +104,9 @@ public class GameBoardSystem : MonoBehaviour
         }
     }
 
-    // Check if the position reached the edge of the puzzle it can exit the level
-    public bool CanExitLevel(Vector2 p_slot, Vector2 p_direction)
+    public bool CanExitLevel(Vector2 p_lastCell, Vector2 p_direction)
     {
-        bool canExitLeft = (p_direction == Vector2.left && p_slot.x == 0);
-        bool canExitRight = (p_direction == Vector2.right && p_slot.x == WIDTH - 1);
-        bool canExitUp = (p_direction == Vector2.up && p_slot.y == HEIGHT - 1);
-        bool canExitDown = (p_direction == Vector2.down && p_slot.x == 0);
-
-        return canExitLeft || canExitRight || canExitUp || canExitDown;
+        return GetSlot(p_lastCell + p_direction) == (int)SlotType.RESTRICTED;
     }
 
     public int GetSlot(Vector2 p_slot)

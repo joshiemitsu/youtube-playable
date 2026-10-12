@@ -58,17 +58,21 @@ public class ArrowEntry : MonoBehaviour
 
     public UniTask OnPressed()
     {
-        Debug.Log("Arrow On Pressed: " + _moveHandler.IsMoving() + " " + _isActive);
         if(_moveHandler.IsMoving() || !_isActive)
         {
            return UniTask.CompletedTask;
         }
 
-        List<Vector2> path = _boardSystem.GetPathCells(_arrowData.Direction, _arrowData.StartPoint); 
+        List<Vector2> path = _boardSystem.GetPathCells(_arrowData.Direction, _arrowData.StartPoint);
 
-        bool canExitLevel = _boardSystem.CanExitLevel(path[^1], _arrowData.Direction);
+        Vector2 lastcell = path.Count > 0 ? path[^1] : _arrowData.StartPoint;
 
-        Debug.Log("Arrow On Pressed: " + canExitLevel + " " + _boardSystem.GetSlot(path[^1]));
+        bool canExitLevel = _boardSystem.CanExitLevel(lastcell, _arrowData.Direction);
+
+        if (!canExitLevel && path.Count == 0)
+        {
+            return UniTask.CompletedTask;
+        }
 
         if (canExitLevel)
         {
@@ -81,7 +85,7 @@ public class ArrowEntry : MonoBehaviour
     public void CleanUp()
     {
         _boardSystem.ReleaseSlots(_arrowData);
-        SetIsActive(true);
+        SetIsActive(false);
     }
 
     // Spawn the parts of the arrow
@@ -111,7 +115,7 @@ public class ArrowEntry : MonoBehaviour
 
     private void LateUpdate()
     {
-        if(!_isActive)
+        if(!_moveHandler.IsMoving())
         {
             return;
         }
