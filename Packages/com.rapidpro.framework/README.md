@@ -15,6 +15,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | Save | `RapidPro.Save` | `ISaveService` / `SaveService` key-value save file |
 | Lifecycle | `RapidPro.Lifecycle` | `IPauseService` / `PauseService`, `IAppLifecycle` / `AppLifecycle` |
 | Display | `RapidPro.Display` | `SafeAreaFitter`, `CanvasFitter`, `CameraFitter` |
+| Scenes | `RapidPro.Scenes` (+ `RapidPro.Scenes.Editor`) | `SceneFlow`, `SceneFlowSettings`, `SceneFlowStarter`, `LoadingProgressBar`, play from any scene |
 
 ## Requirements
 
@@ -336,6 +337,43 @@ Three components that make the game fit any screen: phones, tablets, WebGL in a 
 // After a level loads, e.g. a board of columns x rows cells centred at boardCenter
 _cameraFitter.SetBounds(new Bounds(boardCenter, new Vector3(columns, rows, 0f)));
 ```
+
+## Bootstrap and scene flow
+
+How a game starts:
+
+```
+Bootstrap (stays loaded) ──► Loading (optional, logo + bar) ──► Game + GameUI ──► Loading unloads
+```
+
+- **Bootstrap** holds your `GameInstaller` and every service. It never unloads, so nothing needs `DontDestroyOnLoad`.
+- **Game** is one scene for every level. **GameUI** loads on top of it. Game becomes the active scene, so spawned objects land there.
+
+**Setup**
+
+1. **Assets > Create > RapidPro > Scene Flow Settings**, saved as `Assets/Resources/SceneFlowSettings.asset`. Fill in the scene names. Leave Loading empty if you have no Loading scene. The Console warns if a named scene is missing from the build scene list.
+2. In the Bootstrap scene, register the flow in your installer and add a **SceneFlowStarter** component:
+
+```csharp
+[SerializeField] private SceneFlowSettings _sceneFlowSettings;
+
+protected override void Install()
+{
+    Services.Register<ISceneFlow>(new SceneFlow(_sceneFlowSettings));
+    // ... other services
+}
+```
+
+3. Optional Loading scene: put a **LoadingProgressBar** on a filled Image.
+4. Put Bootstrap first in the build scene list.
+
+**Play from any scene (Editor)**: with the settings asset in Resources and *Play From Any Scene* ticked, pressing Play always starts from Bootstrap, so services exist everywhere.
+- Playing in Game, GameUI, Loading or Bootstrap starts the game normally.
+- Playing in any other scene (e.g. a sandbox or the level editor scene) loads Bootstrap, then opens **only that scene**, even if it is not in the build list.
+- Unity asks to save modified scenes first, because Play loads scenes from disk.
+- Untick the setting, or delete the asset, to play scenes on their own again.
+
+> **Old class:** `Assets/Framework/Boostrap/Boostrap.cs` (loads Game and GameUI, then unloads Bootstrap) is replaced by `SceneFlow`. Remove it when the arrow game migrates.
 
 ## Rules
 

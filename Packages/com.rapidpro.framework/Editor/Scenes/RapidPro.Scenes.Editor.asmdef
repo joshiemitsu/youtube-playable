@@ -1,0 +1,19 @@
+{
+    "name": "RapidPro.Scenes.Editor",
+    "rootNamespace": "RapidPro.Scenes.Editor",
+    "references": [
+        "RapidPro.Core",
+        "RapidPro.Scenes"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
