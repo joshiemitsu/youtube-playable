@@ -1,0 +1,16 @@
+{
+    "name": "RapidPro.Pooling",
+    "rootNamespace": "RapidPro.Pooling",
+    "references": [
+        "RapidPro.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
