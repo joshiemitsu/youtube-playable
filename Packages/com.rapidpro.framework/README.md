@@ -14,6 +14,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | Audio | `RapidPro.Audio` | `AudioManager`, `AudioCue`, `IAudioService`, `IAudioSettings` |
 | Save | `RapidPro.Save` | `ISaveService` / `SaveService` key-value save file |
 | Lifecycle | `RapidPro.Lifecycle` | `IPauseService` / `PauseService`, `IAppLifecycle` / `AppLifecycle` |
+| Display | `RapidPro.Display` | `SafeAreaFitter`, `CanvasFitter`, `CameraFitter` |
 
 ## Requirements
 
@@ -301,6 +302,40 @@ protected override void Install()
 - **Coming back**: fires `ReturnedFromBackground`. With **Resume On Return** ticked (default) the game resumes at once. Untick it once a "tap to continue" overlay calls `Resume(PauseReasons.Background)` itself.
 - **Back button** (Android Back, Escape on desktop): fires `BackPressed`. The UI module will use it to close the top popup or ask to quit.
 - Only real backgrounding counts; clicking another window in the Editor does not pause the game.
+
+## Safe area and camera fit
+
+Three components that make the game fit any screen: phones, tablets, WebGL in a resizable browser, and desktop windows. Each one checks the screen every frame and refits only when the size, orientation or safe area changes. All settings can be tweaked in Play Mode and apply at once. Each also has **Fit Now** in its ⋮ menu.
+
+**CanvasFitter**: add it next to the Canvas Scaler on each Canvas.
+
+| Setting | What it does |
+|---|---|
+| Mode | **Fit Inside** (default): the whole layout always fits, with extra space around it. **Fill**: the layout fills the screen, edges may be cut. **Weighted**: use the sliders below. |
+| Portrait / Landscape Reference | The resolution the UI was designed for in each orientation. Switches by itself when the screen turns. |
+| Width Or Height | Weighted only. 0 = match the screen width, 1 = match the height. |
+
+**SafeAreaFitter**: add it to a full-screen panel under the Canvas and put the screen's content inside. Tick which edges to keep clear (top notch, bottom home bar, left/right in landscape). Backgrounds go outside the panel so they still fill the whole screen.
+
+**CameraFitter**: add it to the camera. It fits the level so it is fully visible on any screen shape.
+
+| Setting | What it does |
+|---|---|
+| Bounds | The world area that must stay visible. Set it here, or from code after a level loads (below). Shown as a cyan box when selected. |
+| Padding | Extra world units around the level. |
+| Mode | **Fit Inside** (default): the whole level is always visible. **Weighted**: blend between fitting width and height. |
+| Width Or Height | Weighted only. 0 = fit the level's width, 1 = fit its height. |
+| Anchor | Where the level sits when there is spare room. (0.5, 0.5) = centre, (0.5, 0) = bottom, (0.5, 1) = top. |
+| Use Safe Area | Keep the level out of notches. |
+| Reserved Top / Bottom | Part of the screen height kept free, e.g. 0.1 for a HUD on top or a banner ad at the bottom. |
+
+- **Orthographic camera**: changes the orthographic size.
+- **Perspective camera**: moves the camera along its view direction (the z axis for a camera looking straight ahead) until the level fits. Works for top-down and tilted cameras too. The rotation is never changed.
+
+```csharp
+// After a level loads, e.g. a board of columns x rows cells centred at boardCenter
+_cameraFitter.SetBounds(new Bounds(boardCenter, new Vector3(columns, rows, 0f)));
+```
 
 ## Rules
 
