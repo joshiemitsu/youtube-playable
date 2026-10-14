@@ -1,0 +1,8 @@
+{
+  "name": "com.rapidpro.framework",
+  "displayName": "RapidPro Framework",
+  "version": "0.1.0",
+  "unity": "6000.3",
+  "description": "Small, readable framework for rapid prototyping hyper/hybrid-casual games.",
+  "dependencies": {}
+}
