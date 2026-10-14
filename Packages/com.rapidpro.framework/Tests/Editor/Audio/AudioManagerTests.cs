@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using RapidPro.Save;
 using UnityEngine;
 
 namespace RapidPro.Audio.Tests
@@ -13,6 +14,7 @@ namespace RapidPro.Audio.Tests
         private GameObject _gameObject;
         private AudioManager _audio;
         private readonly List<Object> _created = new List<Object>();
+        private readonly List<SaveService> _saves = new List<SaveService>();
 
         [SetUp]
         public void SetUp()
@@ -28,6 +30,13 @@ namespace RapidPro.Audio.Tests
             foreach (var obj in _created)
                 Object.DestroyImmediate(obj);
             _created.Clear();
+
+            foreach (var save in _saves)
+            {
+                save.DeleteAll();
+                save.Dispose();
+            }
+            _saves.Clear();
         }
 
         [Test]
@@ -152,6 +161,41 @@ namespace RapidPro.Audio.Tests
 
             Assert.IsNull(_audio.ActiveBgm.Cue);
             Assert.AreEqual(0f, _audio.ActiveBgm.Source.volume);
+        }
+
+        [Test]
+        public void UseSave_LoadsSavedVolumes()
+        {
+            var save = CreateSave();
+            save.Save(AudioManager.MusicVolumeKey, 0.3f);
+            save.Save(AudioManager.SfxVolumeKey, 0.6f);
+
+            _audio.UseSave(save);
+
+            Assert.AreEqual(0.3f, _audio.MusicVolume.CurrentValue, 0.0001f);
+            Assert.AreEqual(0.6f, _audio.SfxVolume.CurrentValue, 0.0001f);
+        }
+
+        [Test]
+        public void SetVolumes_AfterUseSave_AreSaved()
+        {
+            var save = CreateSave();
+            _audio.UseSave(save);
+
+            _audio.SetMusicVolume(0.25f);
+            _audio.SetSfxVolume(0.75f);
+
+            Assert.AreEqual(0.25f, save.Load(AudioManager.MusicVolumeKey, 1f), 0.0001f);
+            Assert.AreEqual(0.75f, save.Load(AudioManager.SfxVolumeKey, 1f), 0.0001f);
+        }
+
+        // In-memory only: the tests never call Flush, and DeleteAll in TearDown removes any file.
+        private SaveService CreateSave()
+        {
+            var path = System.IO.Path.Combine(Application.temporaryCachePath, $"audio-test-{System.Guid.NewGuid():N}.json");
+            var save = new SaveService(path);
+            _saves.Add(save);
+            return save;
         }
 
         private AudioClip CreateClip(string clipName)

@@ -12,6 +12,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | Pooling | `RapidPro.Pooling` | `IPoolService` / `PoolService`, `IPoolable`, `PoolConfig` |
 | StateMachine | `RapidPro.StateMachine` | `StateMachine<TStateId>`, `State` for the game loop |
 | Audio | `RapidPro.Audio` | `AudioManager`, `AudioCue`, `IAudioService`, `IAudioSettings` |
+| Save | `RapidPro.Save` | `ISaveService` / `SaveService` key-value save file |
 
 ## Requirements
 
@@ -217,13 +218,17 @@ _loop.CurrentState.Subscribe(state => _pauseButton.SetActive(state == GameState.
 
 1. Add an `AudioManager` component to a GameObject in the Bootstrap scene, so music keeps playing between levels.
 2. Create one cue per sound: **Assets > Create > RapidPro > Audio Cue**. Add one or more clips; one is picked at random each time. Tune volume, pitch range and the minimum gap (stops fast taps from stacking).
-3. Register it once per interface in your installer:
+3. Connect it to the save service and register it once per interface in your installer:
 
 ```csharp
 [SerializeField] private AudioManager _audio;
 
 protected override void Install()
 {
+    var save = new SaveService();
+    Services.Register<ISaveService>(save);
+
+    _audio.UseSave(save);                       // loads and saves music/SFX volume
     Services.Register<IAudioService>(_audio);   // gameplay and UI
     Services.Register<IAudioSettings>(_audio);  // Settings screen only
 }
@@ -240,7 +245,26 @@ audio.PlaySfx(_exitCue, arrow.position);  // 3D at a world position
 
 - Music crossfades between two sources. Playing the cue that is already playing does nothing.
 - Sound effects use up to 8 sources. When all are busy, the one closest to finishing is reused.
-- `IAudioSettings` exposes `MusicVolume` and `SfxVolume` (0 to 1) for sliders. Volumes live in memory for now; the Save module will persist them.
+- `IAudioSettings` exposes `MusicVolume` and `SfxVolume` (0 to 1) for sliders. After `UseSave`, they are saved under `audio.musicVolume` and `audio.sfxVolume`. Without it they reset on restart.
+
+## Save
+
+Stores small player data under string keys in one JSON file (`Application.persistentDataPath/save.json`).
+
+```csharp
+var save = Services.Get<ISaveService>();
+
+int level = save.Load("progress.level", 1);   // 1 when nothing is saved yet
+save.Save("progress.level", level + 1);       // memory only, cheap
+save.Flush();                                 // write to disk, e.g. after a level
+```
+
+- Values can be `int`, `float`, `bool`, `string`, or any `[Serializable]` class or struct.
+- Name keys by feature: `audio.musicVolume`, `progress.level`, `settings.haptics`.
+- `Save` only changes memory, so calling it from a slider is fine. `Flush` writes the file; it also runs when the app quits. The Pause and app lifecycle module will also flush when the app goes to the background.
+- Writes go to a temp file first, then replace the real one, so a crash mid-write cannot corrupt the save.
+- A save file that can't be read logs a warning and the game starts fresh.
+- `DeleteAll()` wipes everything, for "Reset save" in the debug panel.
 
 ## Rules
 

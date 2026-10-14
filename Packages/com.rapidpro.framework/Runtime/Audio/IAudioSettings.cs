@@ -6,8 +6,8 @@ namespace RapidPro.Audio
     /// Music and SFX volume, for the Settings screen only. Gameplay uses <see cref="IAudioService"/>.
     /// </summary>
     /// <remarks>
-    /// Volumes live in memory for now and reset on restart. The Save module will persist them later,
-    /// without changing this interface.
+    /// Volumes are saved when the <see cref="AudioManager"/> is connected to a save service with
+    /// <see cref="AudioManager.UseSave"/>. Without it they live in memory and reset on restart.
     /// </remarks>
     /// <example>
     /// <code>

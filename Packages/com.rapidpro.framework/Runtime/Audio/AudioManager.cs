@@ -1,5 +1,6 @@
 using R3;
 using RapidPro.Core;
+using RapidPro.Save;
 using UnityEngine;
 
 namespace RapidPro.Audio
@@ -11,18 +12,25 @@ namespace RapidPro.Audio
     /// <list type="bullet">
     /// <item>Music (BGM) crossfades between two sources.</item>
     /// <item>Sound effects (SFX) play from up to 8 sources, in 2D or 3D, and respect each cue's minimum gap.</item>
-    /// <item>Volumes live in memory for now; the Save module will persist them.</item>
+    /// <item>Volumes are loaded from and saved to <see cref="ISaveService"/> once <see cref="UseSave"/> is called.</item>
     /// </list>
-    /// Register it once for each interface in your <c>GameInstaller</c>:
+    /// Register it once for each interface in your <c>GameInstaller</c>, after the save service:
     /// <code>
     /// [SerializeField] private AudioManager _audio;
     ///
+    /// _audio.UseSave(save);
     /// Services.Register&lt;IAudioService&gt;(_audio);
     /// Services.Register&lt;IAudioSettings&gt;(_audio);
     /// </code>
     /// </remarks>
     public class AudioManager : MonoBehaviour, IAudioService, IAudioSettings
     {
+        /// <summary>Save key for the music volume.</summary>
+        public const string MusicVolumeKey = "audio.musicVolume";
+
+        /// <summary>Save key for the SFX volume.</summary>
+        public const string SfxVolumeKey = "audio.sfxVolume";
+
         private readonly ReactiveProperty<float> _musicVolume = new ReactiveProperty<float>(1f);
         private readonly ReactiveProperty<float> _sfxVolume = new ReactiveProperty<float>(1f);
         private readonly SfxGapLimiter _gapLimiter = new SfxGapLimiter();
@@ -31,6 +39,7 @@ namespace RapidPro.Audio
         private BgmChannel _bgmB;
         private BgmChannel _activeBgm;
         private SfxSourcePool _sfxPool;
+        private ISaveService _save;
 
         /// <inheritdoc />
         public ReadOnlyReactiveProperty<float> MusicVolume => _musicVolume;
@@ -48,6 +57,20 @@ namespace RapidPro.Audio
         internal SfxSourcePool SfxPool
         {
             get { EnsureInitialized(); return _sfxPool; }
+        }
+
+        /// <summary>
+        /// Loads the saved music and SFX volumes, then saves every later change to <paramref name="save"/>.
+        /// Call it once from your <c>GameInstaller</c>. Without it, volumes reset on restart.
+        /// </summary>
+        /// <param name="save">The game's save service.</param>
+        public void UseSave(ISaveService save)
+        {
+            SetMusicVolume(save.Load(MusicVolumeKey, 1f));
+            SetSfxVolume(save.Load(SfxVolumeKey, 1f));
+
+            // Set after loading, so loading does not write the same values straight back.
+            _save = save;
         }
 
         /// <inheritdoc />
@@ -103,6 +126,7 @@ namespace RapidPro.Audio
             _musicVolume.Value = Mathf.Clamp01(value);
             _bgmA.ApplyVolume(_musicVolume.Value);
             _bgmB.ApplyVolume(_musicVolume.Value);
+            _save?.Save(MusicVolumeKey, _musicVolume.Value);
         }
 
         /// <summary>
@@ -111,6 +135,7 @@ namespace RapidPro.Audio
         public void SetSfxVolume(float value)
         {
             _sfxVolume.Value = Mathf.Clamp01(value);
+            _save?.Save(SfxVolumeKey, _sfxVolume.Value);
         }
 
         private void Awake()

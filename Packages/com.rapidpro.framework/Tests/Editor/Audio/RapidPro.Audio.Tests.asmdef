@@ -3,6 +3,7 @@
     "rootNamespace": "RapidPro.Audio.Tests",
     "references": [
         "RapidPro.Audio",
+        "RapidPro.Save",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -2,7 +2,8 @@
     "name": "RapidPro.Audio",
     "rootNamespace": "RapidPro.Audio",
     "references": [
-        "RapidPro.Core"
+        "RapidPro.Core",
+        "RapidPro.Save"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
