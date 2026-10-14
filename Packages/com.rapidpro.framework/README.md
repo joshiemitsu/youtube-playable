@@ -16,6 +16,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | Lifecycle | `RapidPro.Lifecycle` | `IPauseService` / `PauseService`, `IAppLifecycle` / `AppLifecycle` |
 | Display | `RapidPro.Display` | `SafeAreaFitter`, `CanvasFitter`, `CameraFitter` |
 | Scenes | `RapidPro.Scenes` (+ `RapidPro.Scenes.Editor`) | `SceneFlow`, `SceneFlowSettings`, `SceneFlowStarter`, `LoadingProgressBar`, play from any scene |
+| Input | `RapidPro.Input` | `InputService` gestures, `InputConfig`, custom `IGestureRecognizer` and `IPointerSource` |
 
 ## Requirements
 
@@ -373,7 +374,48 @@ protected override void Install()
 - Unity asks to save modified scenes first, because Play loads scenes from disk.
 - Untick the setting, or delete the asset, to play scenes on their own again.
 
-> **Old class:** `Assets/Framework/Boostrap/Boostrap.cs` (loads Game and GameUI, then unloads Bootstrap) is replaced by `SceneFlow`. Remove it when the arrow game migrates.
+> **Old class (scenes):** `Assets/Framework/Boostrap/Boostrap.cs` (loads Game and GameUI, then unloads Bootstrap) is replaced by `SceneFlow`. Remove it when the arrow game migrates.
+
+## Input
+
+Touch on phones, mouse and scroll wheel on desktop and WebGL, all as the same gestures.
+
+**Setup**: add an `InputService` component to the Bootstrap scene, assign an **Input Config** (**Assets > Create > RapidPro > Input Config**), and register it:
+
+```csharp
+[SerializeField] private InputService _input;
+Services.Register<IInputService>(_input);
+```
+
+**Gestures**
+
+| Event | When |
+|---|---|
+| `Pressed` / `Released` | Any finger goes down / is lifted (tap release). Released says how long it was down and whether it dragged. |
+| `Tapped` | Quick touch and release without moving. |
+| `DoubleTapped` | Two taps close together. `Tapped` still fires for both, so single taps never feel delayed. |
+| `Held` | Finger held still for the hold time. Fires once; a hold is not also a tap. |
+| `DragStarted` / `Dragged` / `DragEnded` | Finger moved past the drag threshold, then moves, then lifts. |
+| `Flicked` | A quick swipe released while moving fast. Has `Direction` (Up/Down/Left/Right) and `Velocity`. |
+| `Pinched` / `PinchedIn` / `PinchedOut` | Two fingers apart (out) or together (in). The scroll wheel pinches too. Use `Delta` to zoom, `Center` to zoom towards. |
+
+```csharp
+var input = Services.Get<IInputService>();
+input.Tapped.Subscribe(tap => SelectAt(tap.Position)).AddTo(this);
+input.Flicked.Subscribe(flick => Move(flick.Direction)).AddTo(this);
+input.Pinched.Subscribe(pinch => _camera.orthographicSize -= pinch.Delta * 10f).AddTo(this);
+```
+
+- One-finger gestures ignore fingers that were ever part of a two-finger touch, so a pinch never also taps or drags.
+- Touches that start on UI are ignored (toggle in the config), so pressing a button does not also tap the board.
+- Uses unscaled time, so gestures work while paused. Block them instead: `input.Block("popup")` / `input.Unblock("popup")`. Fingers already down when input unblocks are ignored until lifted.
+- Distances in the config are fractions of the screen's shorter side, so gestures feel the same on every resolution.
+
+**Extending it**
+
+1. **Tune**: change thresholds in the Input Config, even in Play Mode.
+2. **New gesture**: implement `IGestureRecognizer` (`Process(frame, config)` and `Reset()`), expose its own `Observable`, and call `input.AddRecognizer(myGesture)`. Each frame gives you every finger with its phase, start position, start time, movement and multi-touch flag. See the example in `IGestureRecognizer.cs`.
+3. **New input source**: implement `IPointerSource` (which pointers are down and where) and call `inputService.SetSource(...)`. Useful for tutorial "ghost hands", input replays or new devices.
 
 ## Rules
 
