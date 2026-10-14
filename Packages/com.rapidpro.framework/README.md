@@ -11,6 +11,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | MVC | `RapidPro.MVC` | `Model`, `View`, `Controller<TModel, TView>` bases |
 | Pooling | `RapidPro.Pooling` | `IPoolService` / `PoolService`, `IPoolable`, `PoolConfig` |
 | StateMachine | `RapidPro.StateMachine` | `StateMachine<TStateId>`, `State` for the game loop |
+| Audio | `RapidPro.Audio` | `AudioManager`, `AudioCue`, `IAudioService`, `IAudioSettings` |
 
 ## Requirements
 
@@ -211,6 +212,35 @@ _loop.CurrentState.Subscribe(state => _pauseButton.SetActive(state == GameState.
 - A change requested while another is still running is **ignored** with a warning, not queued. This stops double taps from skipping states.
 - Changing to the current state exits and re-enters it, which is useful for Retry.
 - `Tick` does nothing while a change is running.
+
+## Audio
+
+1. Add an `AudioManager` component to a GameObject in the Bootstrap scene, so music keeps playing between levels.
+2. Create one cue per sound: **Assets > Create > RapidPro > Audio Cue**. Add one or more clips; one is picked at random each time. Tune volume, pitch range and the minimum gap (stops fast taps from stacking).
+3. Register it once per interface in your installer:
+
+```csharp
+[SerializeField] private AudioManager _audio;
+
+protected override void Install()
+{
+    Services.Register<IAudioService>(_audio);   // gameplay and UI
+    Services.Register<IAudioSettings>(_audio);  // Settings screen only
+}
+```
+
+4. Play sounds:
+
+```csharp
+var audio = Services.Get<IAudioService>();
+audio.PlayBgm(_gameMusic);                // crossfades from the current track
+audio.PlaySfx(_tapCue);                   // 2D
+audio.PlaySfx(_exitCue, arrow.position);  // 3D at a world position
+```
+
+- Music crossfades between two sources. Playing the cue that is already playing does nothing.
+- Sound effects use up to 8 sources. When all are busy, the one closest to finishing is reused.
+- `IAudioSettings` exposes `MusicVolume` and `SfxVolume` (0 to 1) for sliders. Volumes live in memory for now; the Save module will persist them.
 
 ## Rules
 
