@@ -6,7 +6,8 @@ namespace RapidPro.Save
     /// <remarks>
     /// <see cref="Save{T}"/> only changes memory, so it is cheap to call often (e.g. from a slider).
     /// <see cref="Flush"/> writes to disk. Call it after important moments such as finishing a level;
-    /// it also runs automatically when the app quits.
+    /// it also runs automatically when the app quits, and when it goes to the background once
+    /// <c>AppLifecycle</c> is connected.
     /// <para>
     /// Values can be <c>int</c>, <c>float</c>, <c>bool</c>, <c>string</c>, or any <c>[Serializable]</c> class or struct.
     /// Name keys by feature, e.g. <c>"audio.musicVolume"</c> or <c>"progress.level"</c>.

@@ -15,7 +15,7 @@ namespace RapidPro.Save
     /// <item>Writes go to a temporary file first and then replace the real one, so a crash mid-write
     /// cannot leave a half-written save.</item>
     /// <item>A file that cannot be read is logged as a warning and the game starts with empty data.</item>
-    /// <item>Changes are flushed when the app quits. The Pause and app lifecycle module will also flush
+    /// <item>Changes are flushed when the app quits, and by <c>AppLifecycle</c> (RapidPro.Lifecycle)
     /// when the app goes to the background.</item>
     /// </list>
     /// Create it first in your <c>GameInstaller</c>, before services that load from it:

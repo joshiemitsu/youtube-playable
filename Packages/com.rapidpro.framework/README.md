@@ -13,6 +13,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | StateMachine | `RapidPro.StateMachine` | `StateMachine<TStateId>`, `State` for the game loop |
 | Audio | `RapidPro.Audio` | `AudioManager`, `AudioCue`, `IAudioService`, `IAudioSettings` |
 | Save | `RapidPro.Save` | `ISaveService` / `SaveService` key-value save file |
+| Lifecycle | `RapidPro.Lifecycle` | `IPauseService` / `PauseService`, `IAppLifecycle` / `AppLifecycle` |
 
 ## Requirements
 
@@ -261,10 +262,45 @@ save.Flush();                                 // write to disk, e.g. after a lev
 
 - Values can be `int`, `float`, `bool`, `string`, or any `[Serializable]` class or struct.
 - Name keys by feature: `audio.musicVolume`, `progress.level`, `settings.haptics`.
-- `Save` only changes memory, so calling it from a slider is fine. `Flush` writes the file; it also runs when the app quits. The Pause and app lifecycle module will also flush when the app goes to the background.
+- `Save` only changes memory, so calling it from a slider is fine. `Flush` writes the file; it also runs when the app quits, and when the app goes to the background once `AppLifecycle` is connected (see below).
 - Writes go to a temp file first, then replace the real one, so a crash mid-write cannot corrupt the save.
 - A save file that can't be read logs a warning and the game starts fresh.
 - `DeleteAll()` wipes everything, for "Reset save" in the debug panel.
+
+## Pause and app lifecycle
+
+**Pause** works by reason. The game stays paused until every reason is resumed, so closing a popup does not unpause a game the player paused.
+
+```csharp
+_pause.Pause(PauseReasons.Popup);    // Time.timeScale = 0
+_pause.Resume(PauseReasons.Popup);   // restores the previous timeScale when no reasons are left
+
+_pause.IsPaused.Subscribe(paused => _pauseOverlay.SetActive(paused)).AddTo(this);
+```
+
+Anything that must keep moving while paused (UI tweens, music fades) should use unscaled time.
+
+**App lifecycle**: add an `AppLifecycle` component to the Bootstrap scene and connect it:
+
+```csharp
+[SerializeField] private AppLifecycle _lifecycle;
+
+protected override void Install()
+{
+    var save = new SaveService();
+    var pause = new PauseService();
+    Services.Register<ISaveService>(save);
+    Services.Register<IPauseService>(pause);
+
+    _lifecycle.Connect(pause, save);
+    Services.Register<IAppLifecycle>(_lifecycle);
+}
+```
+
+- **Going to the background**: pauses (`PauseReasons.Background`), flushes the save, then fires `WentToBackground`.
+- **Coming back**: fires `ReturnedFromBackground`. With **Resume On Return** ticked (default) the game resumes at once. Untick it once a "tap to continue" overlay calls `Resume(PauseReasons.Background)` itself.
+- **Back button** (Android Back, Escape on desktop): fires `BackPressed`. The UI module will use it to close the top popup or ask to quit.
+- Only real backgrounding counts; clicking another window in the Editor does not pause the game.
 
 ## Rules
 
