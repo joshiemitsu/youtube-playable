@@ -1,0 +1,22 @@
+{
+    "name": "RapidPro.GameLoop",
+    "rootNamespace": "RapidPro.GameLoop",
+    "references": [
+        "RapidPro.Core",
+        "RapidPro.Events",
+        "RapidPro.Save",
+        "RapidPro.StateMachine",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "R3.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

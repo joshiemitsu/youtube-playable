@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 736f3e559a6179c46908f024cf75993a, type: 3}
+  m_Name: SceneFlowSettings
+  m_EditorClassIdentifier: RapidPro.Scenes::RapidPro.Scenes.SceneFlowSettings
+  _bootstrapScene: Bootstrap
+  _loadingScene: 
+  _gameScene: Game
+  _gameUIScene: GameUI
+  _minimumLoadingSeconds: 1
+  _playFromAnyScene: 1

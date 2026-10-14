@@ -1,0 +1,31 @@
+{
+    "name": "Game",
+    "rootNamespace": "",
+    "references": [
+        "RapidPro.Core",
+        "RapidPro.Events",
+        "RapidPro.MVC",
+        "RapidPro.Pooling",
+        "RapidPro.StateMachine",
+        "RapidPro.GameLoop",
+        "RapidPro.Save",
+        "RapidPro.Lifecycle",
+        "RapidPro.Display",
+        "RapidPro.Scenes",
+        "RapidPro.Input",
+        "UniTask",
+        "R3.Unity",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

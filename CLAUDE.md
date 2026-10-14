@@ -11,6 +11,15 @@ Unity 6 (6000.3) project. Game code lives in `Assets/Game`. Reusable framework c
 - Log through `RapidPro.Core.Log`, not `Debug.Log`.
 - SOLID, but readability wins ties. Code should be easy for a mid-level developer to follow.
 
+## Making a game on the framework
+
+The arrow game in `Assets/Game` is the reference. A new game needs only:
+1. A `LevelData` subclass + a `LevelCatalog` asset (see `Assets/Game/Levels/Scripts/ArrowLevelData.cs`).
+2. One `IGameMode` MonoBehaviour that builds the level, listens to input and calls `IGameLoop.Win()` / `Lose()` (see `Assets/Game/GameMode/ArrowGameMode.cs`).
+3. A prefab variant of `Packages/com.rapidpro.framework/Runtime/GameLoop/Prefabs/GameRoot.prefab` holding the game mode and board (see `Assets/Game/Prefabs/ArrowGame.prefab`). Never edit GameRoot itself.
+
+Services are registered in the Bootstrap scene by `Assets/Game/Bootstrap/GameServicesInstaller.cs`. UI reads `IGameLoop.State` and game-specific read-only interfaces (e.g. `IHearts`), never the game mode directly. Read `Packages/com.rapidpro.framework/README.md` for each module's API before searching the code.
+
 ## R3 rules
 
 - Never expose a public `Subject`. Expose `Observable<T>` instead.

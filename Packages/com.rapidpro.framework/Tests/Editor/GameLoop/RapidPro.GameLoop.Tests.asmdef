@@ -1,0 +1,29 @@
+{
+    "name": "RapidPro.GameLoop.Tests",
+    "rootNamespace": "RapidPro.GameLoop.Tests",
+    "references": [
+        "RapidPro.GameLoop",
+        "RapidPro.GameLoop.TestDoubles",
+        "RapidPro.Events",
+        "RapidPro.Save",
+        "UniTask",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "R3.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

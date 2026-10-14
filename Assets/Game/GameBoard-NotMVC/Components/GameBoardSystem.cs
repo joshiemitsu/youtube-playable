@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using ObservableCollections;
-using R3;
+using RapidPro.Core;
 using UnityEngine;
 
 public enum SlotType
@@ -23,9 +22,8 @@ public class GameBoardSystem : MonoBehaviour
     [SerializeField] private Transform _worldParent;
     public Transform WorldParent => _worldParent;
 
-    [Header("Subjects")]
-    public readonly Subject<(int width, int height)> SpawnGrid = new();
-    public readonly Subject<int[,]> OnBoardChanged = new();
+    public int Width => WIDTH;
+    public int Height => HEIGHT;
 
     private int[,] _boardSlots;
 
@@ -33,23 +31,17 @@ public class GameBoardSystem : MonoBehaviour
     private Vector2 _startPoint;
     private Vector2 _currentPoint;
 
-    public void Start()
+    // Builds an empty board for a level. Cells outside the shape are RESTRICTED.
+    public void Setup(int p_width, int p_height, IEnumerable<Vector2Int> p_restrictedCells)
     {
-        Debug.Log("GBSystem Awake");
-        Init();
-    }
-
-    private void Init()
-    {
-        Debug.Log("GBSystem Init");
+        WIDTH = p_width;
+        HEIGHT = p_height;
         _boardSlots = new int[WIDTH, HEIGHT];
-        SpawnGrid.OnNext((WIDTH, HEIGHT));
-    }
 
-    public void OnDestroy()
-    {
-        SpawnGrid.Dispose();
-        OnBoardChanged.Dispose();
+        foreach (var cell in p_restrictedCells)
+        {
+            SetSlot(new Vector2(cell.x, cell.y), (int)SlotType.RESTRICTED);
+        }
     }
 
     // Check if the arrows can move given the said direction and returns board position
@@ -64,27 +56,23 @@ public class GameBoardSystem : MonoBehaviour
 
         while (true)
         {
-            Debug.Log("Getting Slot in : " + _currentPoint);
-
-            bool isOutOfBounds = _currentPoint.x < 0 || _currentPoint.y < 0 || 
+            bool isOutOfBounds = _currentPoint.x < 0 || _currentPoint.y < 0 ||
                                 _currentPoint.x >= WIDTH || _currentPoint.y >= HEIGHT;
             if (isOutOfBounds)
             {
-                Debug.Log("Reached Out of bounds");
                 return pathToExit;
             }
 
             bool didReachedEnding = GetSlot(_currentPoint) == (int)SlotType.RESTRICTED;
             if (didReachedEnding)
             {
-                Debug.Log("Reached Ending");
                 return pathToExit;
             }
 
             bool isValidSlot = GetSlot(_currentPoint) == (int)SlotType.FREE;
             if (!isValidSlot)
             {
-                Debug.Log("is not ValidSlot");
+                Log.Info("Path blocked at " + _currentPoint);
                 return pathToExit;
             }
 
@@ -112,7 +100,7 @@ public class GameBoardSystem : MonoBehaviour
     public int GetSlot(Vector2 p_slot)
     {
         // If slot is in edge
-        if(p_slot.x >= WIDTH || p_slot.x < 0 
+        if(p_slot.x >= WIDTH || p_slot.x < 0
             || p_slot.y >= HEIGHT || p_slot.y < 0)
         {
             return (int)SlotType.RESTRICTED;
@@ -124,6 +112,8 @@ public class GameBoardSystem : MonoBehaviour
     public void SetSlot(Vector2 p_slot, int p_value)
         => _boardSlots[(int) p_slot.x, (int) p_slot.y] = p_value;
 
+    public bool IsPlayable(Vector2 p_slot) => GetSlot(p_slot) != (int)SlotType.RESTRICTED;
+
     public Vector2 GetWorldPosition(Vector2 p_slotPos)
     {
         float xOffset = (WIDTH - 1) * SPACING * 0.5f;
@@ -131,5 +121,26 @@ public class GameBoardSystem : MonoBehaviour
         return (Vector2)_worldParent.position + new Vector2(
                         p_slotPos.x * SPACING - xOffset,
                         p_slotPos.y * SPACING - yOffset);
+    }
+
+    // World area covered by the playable cells, so the camera can fit the shape (not the empty corners)
+    public Bounds GetPlayableWorldBounds()
+    {
+        bool hasCell = false;
+        Bounds bounds = new Bounds(_worldParent.position, Vector3.zero);
+        Vector3 cellSize = new Vector3(SPACING, SPACING, 0f);
+
+        for (int x = 0; x < WIDTH; x++)
+        {
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                if (!IsPlayable(new Vector2(x, y))) continue;
+
+                var cellBounds = new Bounds(GetWorldPosition(new Vector2(x, y)), cellSize);
+                if (hasCell) bounds.Encapsulate(cellBounds);
+                else { bounds = cellBounds; hasCell = true; }
+            }
+        }
+        return bounds;
     }
 }

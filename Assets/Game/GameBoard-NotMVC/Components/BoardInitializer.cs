@@ -1,9 +1,9 @@
-using Cysharp.Threading.Tasks;
-using R3;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using RapidPro.Core;
+using RapidPro.Pooling;
 using UnityEngine;
 
+// Builds a level on the board: dots for every playable cell and the arrows, all from the pool
 public class BoardInitializer : MonoBehaviour
 {
     [Header("Main System")]
@@ -13,102 +13,105 @@ public class BoardInitializer : MonoBehaviour
     [SerializeField] private GameObject _dotsPrefab;
     [SerializeField] private GameObject _arrowPrefab;
 
-    [Header("World Positions")]
-    [SerializeField] private Vector2[,] _worldPosition;
-
-    [Header("GameObject Lists")]
-    // create list of arrows for now
-    private List<ArrowEntry> _activeArrows = new List<ArrowEntry>();
-    private List<ArrowEntry> _inactiveArrow = new List<ArrowEntry>();
-
-    private void Awake()
+    [Header("Look")]
+    [Tooltip("Arrow colours, used in turn so neighbouring arrows are easy to tell apart.")]
+    [SerializeField] private Color[] _arrowColors =
     {
-        var d = Disposable.CreateBuilder();
-        _boardSystem.SpawnGrid
-            .Subscribe(Size => SpawnBoard(Size.width, Size.height))
-            .AddTo(ref d);
-        d.RegisterTo(destroyCancellationToken);
+        new Color(0.32f, 0.91f, 0.06f),
+        new Color(0.13f, 0.59f, 0.95f),
+        new Color(1.00f, 0.60f, 0.00f),
+        new Color(0.91f, 0.12f, 0.39f),
+        new Color(0.61f, 0.15f, 0.69f),
+        new Color(0.00f, 0.74f, 0.83f),
+    };
+
+    private readonly List<GameObject> _dots = new List<GameObject>();
+    private readonly List<ArrowEntry> _arrows = new List<ArrowEntry>();
+    private IPoolService _pool;
+
+    // Arrows still on the board
+    public IReadOnlyList<ArrowEntry> Arrows => _arrows;
+
+    public void Build(ArrowLevelData p_level, IPoolService p_pool)
+    {
+        _pool = p_pool;
+        _boardSystem.Setup(p_level.Width, p_level.Height, p_level.RestrictedCells);
+
+        SpawnDots(p_level);
+        SpawnArrows(p_level);
     }
 
-    private void SpawnBoard(int p_width, int p_height)
+    // Removes an arrow that has left the board
+    public void Despawn(ArrowEntry p_arrow)
     {
-        Debug.Log("Spawn Board called");
-        _worldPosition = new Vector2[p_width, p_height]; 
+        p_arrow.DespawnParts();
+        _pool.Despawn(p_arrow.gameObject);
+        _arrows.Remove(p_arrow);
+    }
 
-        for (int w = 0; w < p_width; w++)
+    // Returns everything on the board to the pool
+    public void Clear()
+    {
+        for (int i = _arrows.Count - 1; i >= 0; i--)
         {
-            for (int h = 0; h < p_height; h++)
-            {
-                GameObject obj = Instantiate(_dotsPrefab, _boardSystem.WorldParent.transform);
-
-                obj.transform.position = _boardSystem.GetWorldPosition(new Vector2(w,h));
-
-                _worldPosition[w, h] = new Vector2(w, h);
-            }
+            Despawn(_arrows[i]);
         }
 
-        SpawnArrows();
+        foreach (var dot in _dots)
+        {
+            _pool.Despawn(dot);
+        }
+        _dots.Clear();
     }
 
-    private void SpawnArrows()
+    private void SpawnDots(ArrowLevelData p_level)
     {
-        GameObject obj = Instantiate(_arrowPrefab, _boardSystem.WorldParent.transform);
-        ArrowEntry arrowEntry = obj.GetComponent<ArrowEntry>();
+        for (int w = 0; w < p_level.Width; w++)
+        {
+            for (int h = 0; h < p_level.Height; h++)
+            {
+                Vector2 cell = new Vector2(w, h);
+                if (!_boardSystem.IsPlayable(cell)) continue;
 
-        List<Vector2> posList = new List<Vector2>();
-        //posList.Add(_worldPosition[1, 0]);
-        //_boardSystem.SetSlot(new Vector2(1, 0), (int)SlotType.OCCUPIED);
+                GameObject dot = _pool.Spawn(_dotsPrefab, _boardSystem.GetWorldPosition(cell), Quaternion.identity);
+                dot.transform.SetParent(_boardSystem.WorldParent, true);
+                _dots.Add(dot);
+            }
+        }
+    }
 
-        posList.Add(_worldPosition[2, 0]);
-        _boardSystem.SetSlot(new Vector2(2, 0), (int)SlotType.OCCUPIED);
+    private void SpawnArrows(ArrowLevelData p_level)
+    {
+        for (int i = 0; i < p_level.Arrows.Count; i++)
+        {
+            ArrowDefinition definition = p_level.Arrows[i];
 
-        posList.Add(_worldPosition[3, 0]);
-        _boardSystem.SetSlot(new Vector2(3, 0), (int)SlotType.OCCUPIED);
+            List<Vector2> points = new List<Vector2>();
+            foreach (Vector2Int cell in definition.Cells)
+            {
+                Vector2 point = new Vector2(cell.x, cell.y);
+                points.Add(point);
+                _boardSystem.SetSlot(point, (int)SlotType.OCCUPIED);
+            }
 
-        posList.Add(_worldPosition[3, 1]);
-        _boardSystem.SetSlot(new Vector2(3, 1), (int)SlotType.OCCUPIED);
+            ArrowData data = new ArrowData();
+            data.Points = points;
+            data.Direction = new Vector2(definition.Direction.x, definition.Direction.y);
 
-        posList.Add(_worldPosition[3, 2]);
-        _boardSystem.SetSlot(new Vector2(3, 2), (int)SlotType.OCCUPIED);
+            // The head is drawn facing away from its second segment, so the arrow must also move that way
+            bool facesItsMove = points.Count < 2 || points[0] - points[1] == data.Direction;
+            if (!facesItsMove)
+            {
+                Log.Warning($"Arrow {i} in {p_level.name} moves {data.Direction} but its head faces {points[0] - points[1]}. Regenerate the level.");
+            }
+            data.StartPoint = points[0]; // Get first index as the start position
 
-        posList.Add(_worldPosition[4, 2]);
-        _boardSystem.SetSlot(new Vector2(4, 2), (int)SlotType.OCCUPIED);
+            GameObject obj = _pool.Spawn(_arrowPrefab, _boardSystem.GetWorldPosition(points[0]), Quaternion.identity);
+            obj.transform.SetParent(_boardSystem.WorldParent, true);
 
-        posList.Add(_worldPosition[4, 3]);
-        _boardSystem.SetSlot(new Vector2(4, 3), (int)SlotType.OCCUPIED);
-
-        posList.Add(_worldPosition[4, 4]);
-        _boardSystem.SetSlot(new Vector2(4, 4), (int)SlotType.OCCUPIED);
-
-        posList.Add(_worldPosition[5, 4]);
-        _boardSystem.SetSlot(new Vector2(5, 4), (int)SlotType.OCCUPIED);
-
-        ArrowData newData = new ArrowData();
-        newData.Points = posList;
-        newData.Direction = Vector2.left;
-        newData.StartPoint = posList[0]; // Get first index as the start position
-
-        arrowEntry.Initialize(_boardSystem, newData);
-
-
-        GameObject obj2 = Instantiate(_arrowPrefab, _boardSystem.WorldParent.transform);
-        ArrowEntry arrowEntry2 = obj2.GetComponent<ArrowEntry>();
-
-        List<Vector2> posList2 = new List<Vector2>();
-        posList2.Add(_worldPosition[0, 2]);
-        _boardSystem.SetSlot(new Vector2(0, 2), (int)SlotType.OCCUPIED);
-
-        posList2.Add(_worldPosition[0, 1]);
-        _boardSystem.SetSlot(new Vector2(0, 1), (int)SlotType.OCCUPIED);
-
-        posList2.Add(_worldPosition[0, 0]);
-        _boardSystem.SetSlot(new Vector2(0, 0), (int)SlotType.OCCUPIED);
-
-        ArrowData newData2 = new ArrowData();
-        newData2.Points = posList2;
-        newData2.Direction = Vector2.up;
-        newData2.StartPoint = posList2[0]; // Get first index as the start position
-
-        arrowEntry2.Initialize(_boardSystem, newData2);
+            ArrowEntry arrow = obj.GetComponent<ArrowEntry>();
+            arrow.Initialize(_boardSystem, data, _pool, _arrowColors[i % _arrowColors.Length]);
+            _arrows.Add(arrow);
+        }
     }
 }

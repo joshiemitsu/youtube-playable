@@ -17,6 +17,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | Display | `RapidPro.Display` | `SafeAreaFitter`, `CanvasFitter`, `CameraFitter` |
 | Scenes | `RapidPro.Scenes` (+ `RapidPro.Scenes.Editor`) | `SceneFlow`, `SceneFlowSettings`, `SceneFlowStarter`, `LoadingProgressBar`, play from any scene |
 | Input | `RapidPro.Input` | `InputService` gestures, `InputConfig`, custom `IGestureRecognizer` and `IPointerSource` |
+| GameLoop | `RapidPro.GameLoop` | `IGameMode` contract, `GameLoop` (Playing → Win/Lose), `LevelData`, `LevelCatalog`, `GameRoot` prefab |
 
 ## Requirements
 
@@ -135,7 +136,7 @@ public class ScoreController : Controller<ScoreModel, ScoreView>
 - If nothing was bound, `Start` binds `CreateModel()`, which is `new TModel()` by default. Override it to fetch a shared model, e.g. from `Services`.
 - The controller never disposes the model; whoever created it does.
 
-> **Old classes:** the arrow game still uses the earlier `BaseModel`, `BaseView`, `BaseController` and `ModelLocator` in `Assets/Framework/MVC`. They stay until the game migrates in its own step. New code should use `RapidPro.MVC`.
+> The earlier `Assets/Framework/MVC` classes (`BaseModel`, `BaseView`, `BaseController`, `ModelLocator`) were removed when the arrow game moved onto the framework. Use `RapidPro.MVC`, and `Services` instead of `ModelLocator`.
 
 ## Pooling
 
@@ -374,7 +375,7 @@ protected override void Install()
 - Unity asks to save modified scenes first, because Play loads scenes from disk.
 - Untick the setting, or delete the asset, to play scenes on their own again.
 
-> **Old class (scenes):** `Assets/Framework/Boostrap/Boostrap.cs` (loads Game and GameUI, then unloads Bootstrap) is replaced by `SceneFlow`. Remove it when the arrow game migrates.
+> The earlier `Assets/Framework/Boostrap/Boostrap.cs` (which unloaded Bootstrap) was replaced by `SceneFlow` and removed.
 
 ## Input
 
@@ -415,7 +416,45 @@ input.Pinched.Subscribe(pinch => _camera.orthographicSize -= pinch.Delta * 10f).
 
 1. **Tune**: change thresholds in the Input Config, even in Play Mode.
 2. **New gesture**: implement `IGestureRecognizer` (`Process(frame, config)` and `Reset()`), expose its own `Observable`, and call `input.AddRecognizer(myGesture)`. Each frame gives you every finger with its phase, start position, start time, movement and multi-touch flag. See the example in `IGestureRecognizer.cs`.
-3. **New input source**: implement `IPointerSource` (which pointers are down and where) and call `inputService.SetSource(...)`. Useful for tutorial "ghost hands", input replays or new devices.
+3. **New input source**: implement `IPointerSource` (which pointers are down and where) and call `inputService.SetSource(...)`. Useful for tutorial "ghost hands", input replays or new devices. `ScriptedPointerSource` is a ready-made one you drive from code (`Press`, `Move`, `Release`, `Scroll`).
+
+## Game loop
+
+The framework owns the flow; the game only supplies its rules.
+
+```
+GameLoopRunner (on the GameRoot prefab)
+  └─ GameLoop:  Playing ──► Win or Lose ──► Restart / Next level ──► Playing
+                  │
+                  └─ calls your IGameMode: Cleanup → PrepareAsync(level) → Begin
+```
+
+**Make a game (3 steps)**
+
+1. **Level data**: subclass `LevelData` with what a level needs, and list levels in a **Level Catalog** (**Assets > Create > RapidPro > Level Catalog**). The list loops after the last level.
+2. **Game mode**: a MonoBehaviour implementing `IGameMode`:
+
+```csharp
+public class MyGameMode : MonoBehaviour, IGameMode
+{
+    public UniTask PrepareAsync(LevelData level, CancellationToken ct) { /* build the board */ return UniTask.CompletedTask; }
+    public void Begin()   { /* start listening to input */ }
+    public void Cleanup() { /* despawn everything; safe when nothing was spawned */ }
+
+    // Your rules decide the result:
+    private void OnBoardCleared() => Services.Get<IGameLoop>().Win();
+    private void OnOutOfTries()   => Services.Get<IGameLoop>().Lose();
+}
+```
+
+3. **Prefab variant**: right-click `Packages/RapidPro Framework/Runtime/GameLoop/Prefabs/GameRoot.prefab` > **Create > Prefab Variant**. Add your game mode next to its `GameLoopRunner`, assign your Level Catalog, put the game's board objects inside it, and drop the variant into the Game scene. Never edit GameRoot itself; framework fixes then reach every game.
+
+**UI** reads the loop, never the game: `Services.Get<IGameLoop>().State` (Home, Playing, Win, Lose) shows and hides screens; buttons call `RestartAsync()` or `NextLevelAsync()`.
+
+- `Win()` and `Lose()` are ignored unless a level is playing, so late or repeated calls are harmless.
+- Winning saves the next level index (`progress.level`); `StartAsync` continues from it.
+- `LevelStarted`, `LevelCompleted` and `LevelFailed` go out on the event bus, ready for analytics and audio.
+- Restarts don't reload scenes: `Cleanup` returns everything to the pool and `PrepareAsync` builds the level again.
 
 ## Rules
 

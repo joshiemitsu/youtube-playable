@@ -20,18 +20,20 @@ namespace RapidPro.Input
         public void ReadPointers(List<RawPointer> pointers)
         {
 #if ENABLE_INPUT_SYSTEM
+            // "Pressed this frame" also counts, so a very quick tap that goes down and up within one
+            // frame is still seen: it is down this frame and released the next.
             var touchscreen = Touchscreen.current;
             if (touchscreen != null)
             {
                 foreach (var touch in touchscreen.touches)
                 {
-                    if (touch.press.isPressed)
+                    if (touch.press.isPressed || touch.press.wasPressedThisFrame)
                         pointers.Add(new RawPointer(touch.touchId.ReadValue(), touch.position.ReadValue()));
                 }
             }
 
             var mouse = Mouse.current;
-            if (pointers.Count == 0 && mouse != null && mouse.leftButton.isPressed)
+            if (pointers.Count == 0 && mouse != null && (mouse.leftButton.isPressed || mouse.leftButton.wasPressedThisFrame))
                 pointers.Add(new RawPointer(RawPointer.MouseId, mouse.position.ReadValue()));
 #else
             for (int i = 0; i < UnityEngine.Input.touchCount; i++)

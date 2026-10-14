@@ -142,6 +142,9 @@ namespace RapidPro.Input
             Recognizers.Remove(recognizer);
         }
 
+        /// <summary>Where input comes from right now. Null until the first frame.</summary>
+        public IPointerSource Source => _source;
+
         /// <summary>
         /// Replaces where input comes from, e.g. a replay or tutorial source. Gestures in progress are dropped.
         /// </summary>

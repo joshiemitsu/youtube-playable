@@ -1,13 +1,13 @@
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
 /// Handles the arrow movements
 /// </summary>
-/// 
+///
 
 public class ArrowMoveContext
 {
@@ -27,6 +27,9 @@ public class ArrowMoveHandler: MonoBehaviour
     [Tooltip("Extra steps after the tail leaves the board, so the arrow fully exits the screen.")]
     [SerializeField] private int _bufferSteps = 10;
 
+    [Tooltip("How far the head nudges forward when another arrow is right in front of it, in cells.")]
+    [SerializeField] private float _bumpDistance = 0.25f;
+
     private bool _isMoving = false;
 
     private GameBoardSystem _boardSystem = null;
@@ -45,6 +48,7 @@ public class ArrowMoveHandler: MonoBehaviour
         _parent = p_entry;
         _subUnits = p_entry.SubUnitList;
         _boardSystem = p_system;
+        _isMoving = false;
     }
 
     public bool IsMoving()
@@ -52,20 +56,32 @@ public class ArrowMoveHandler: MonoBehaviour
         return _isMoving;
     }
 
-    public UniTask Move(List<Vector2> p_pathCells, Vector2 p_direction, bool p_canExitLevel)
+    public async UniTask Move(List<Vector2> p_pathCells, Vector2 p_direction, bool p_canExitLevel)
     {
         _pathToExit = p_pathCells;
         _direction = p_direction;
 
         _isMoving = true;
 
-        if(p_canExitLevel)
+        // try/finally so a failed or cancelled move can never leave the arrow stuck as "moving"
+        try
         {
-            return DoMoveSequence();
+            if (p_canExitLevel)
+            {
+                await DoMoveSequence();
+            }
+            else if (p_pathCells.Count == 0)
+            {
+                await DoBumpSequence();
+            }
+            else
+            {
+                await DoMoveThenRevertSequence();
+            }
         }
-        else
+        finally
         {
-            return DoMoveThenRevertSequence();
+            _isMoving = false;
         }
     }
 
@@ -85,8 +101,6 @@ public class ArrowMoveHandler: MonoBehaviour
             }
             await UniTask.Delay(TimeSpan.FromSeconds(_speed));
         }
-
-        _isMoving = false;
     }
 
     // Move the arrow until hit something then go back to previous position
@@ -98,7 +112,6 @@ public class ArrowMoveHandler: MonoBehaviour
         for (int step = 0; step < _pathToExit.Count; step++)
         {
             Vector2 leaderCell = GetHeadCell(step);
-            Debug.Log("Step Count: " + step);
             for (int i = 0; i < _subUnits.Count; i++)
             {
                 var unit = _subUnits[i];
@@ -109,7 +122,6 @@ public class ArrowMoveHandler: MonoBehaviour
                 // Get the last unit and save the path
                 if (i == _subUnits.Count - 1)
                 {
-                    Debug.Log("Save the last cell: "  + i + "-" + (_subUnits.Count - 1));
                     _pathToOriginal.Add(previousCell);
                 }
             }
@@ -117,8 +129,6 @@ public class ArrowMoveHandler: MonoBehaviour
         }
 
         await UniTask.Delay(TimeSpan.FromSeconds(_speed));
-
-        Debug.Log("Path to original: " + _pathToOriginal.Count);
 
         // Reverse to original position
         for (int step = _pathToOriginal.Count - 1; step >= 0; step --)
@@ -135,8 +145,16 @@ public class ArrowMoveHandler: MonoBehaviour
             }
             await UniTask.Delay(TimeSpan.FromSeconds(_speed));
         }
+    }
 
-        _isMoving = false;
+    // Another arrow is right in front: nudge the head forward and back so the hit is visible
+    private async UniTask DoBumpSequence()
+    {
+        Transform head = _subUnits[0].transform;
+        float duration = Mathf.Max(_speed * 4f, 0.15f);
+
+        head.DOPunchPosition(_direction * _bumpDistance, duration, 1, 0f);
+        await UniTask.Delay(TimeSpan.FromSeconds(duration));
     }
 
     private Vector2 GetHeadCell(int step)
