@@ -1,0 +1,26 @@
+{
+    "name": "RapidPro.MVC.Tests",
+    "rootNamespace": "RapidPro.MVC.Tests",
+    "references": [
+        "RapidPro.MVC",
+        "RapidPro.MVC.TestDoubles",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll",
+        "R3.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

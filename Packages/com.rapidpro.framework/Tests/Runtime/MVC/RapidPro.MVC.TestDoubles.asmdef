@@ -1,0 +1,20 @@
+{
+    "name": "RapidPro.MVC.TestDoubles",
+    "rootNamespace": "RapidPro.MVC.Tests",
+    "references": [
+        "RapidPro.MVC"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "R3.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
