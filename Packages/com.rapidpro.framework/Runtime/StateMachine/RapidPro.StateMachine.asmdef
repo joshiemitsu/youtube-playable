@@ -1,0 +1,19 @@
+{
+    "name": "RapidPro.StateMachine",
+    "rootNamespace": "RapidPro.StateMachine",
+    "references": [
+        "RapidPro.Core",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "R3.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

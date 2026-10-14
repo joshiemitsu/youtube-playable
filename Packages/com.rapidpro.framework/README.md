@@ -10,6 +10,7 @@ A small, readable framework for rapid prototyping hyper/hybrid-casual games in U
 | Events | `RapidPro.Events` | `IEventBus` / `EventBus` for events between features |
 | MVC | `RapidPro.MVC` | `Model`, `View`, `Controller<TModel, TView>` bases |
 | Pooling | `RapidPro.Pooling` | `IPoolService` / `PoolService`, `IPoolable`, `PoolConfig` |
+| StateMachine | `RapidPro.StateMachine` | `StateMachine<TStateId>`, `State` for the game loop |
 
 ## Requirements
 
@@ -167,6 +168,49 @@ public class Coin : MonoBehaviour, IPoolable
 
 - Each prefab gets its own pool. Pooled objects wait, inactive, under `[RapidPro Pool]` in the Hierarchy.
 - Despawning an object that wasn't spawned from a pool logs a warning and destroys it. Despawning twice logs a warning and is ignored.
+
+## State machine
+
+Runs the game loop `Home → Playing → Win or Lose → Home`. States are keyed by an enum and the current state is observable, so UI can react. Needs UniTask (`https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask`).
+
+```csharp
+public enum GameState { Home, Playing, Win, Lose }
+
+public class PlayingState : State
+{
+    protected override void Enter() { /* start the level */ }
+    public override void Tick(float deltaTime) { /* update timers */ }
+    public override void Exit() { /* stop input */ }
+}
+
+public class WinState : State
+{
+    // Override EnterAsync instead of Enter when you need to wait, e.g. for an animation.
+    public override async UniTask EnterAsync(CancellationToken cancellationToken)
+    {
+        await _winScreen.PlayShowAnimation(cancellationToken);
+    }
+}
+
+// Setup, e.g. in a GameLoop MonoBehaviour
+_loop = new StateMachine<GameState>();
+_loop.Register(GameState.Home, new HomeState());
+_loop.Register(GameState.Playing, new PlayingState());
+_loop.Register(GameState.Win, new WinState());
+_loop.Register(GameState.Lose, new LoseState());
+_loop.ChangeStateAsync(GameState.Home, destroyCancellationToken).Forget();
+
+// Update
+_loop.Tick(Time.deltaTime);
+
+// UI
+_loop.CurrentState.Subscribe(state => _pauseButton.SetActive(state == GameState.Playing)).AddTo(this);
+```
+
+- A change calls `Exit` on the old state, updates `CurrentState`, then waits for the new state's `EnterAsync`.
+- A change requested while another is still running is **ignored** with a warning, not queued. This stops double taps from skipping states.
+- Changing to the current state exits and re-enters it, which is useful for Retry.
+- `Tick` does nothing while a change is running.
 
 ## Rules
 
